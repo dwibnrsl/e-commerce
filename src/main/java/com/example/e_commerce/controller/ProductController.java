@@ -8,7 +8,6 @@ import jakarta.validation.Valid;
 import com.example.e_commerce.entity.Product;
 import com.example.e_commerce.service.ProductService;
 import com.example.e_commerce.dto.ProductStockDTO;
-import com.example.e_commerce.entity.ProductStockHistory;
 import com.example.e_commerce.dto.StockRequest;
 
 @RestController
