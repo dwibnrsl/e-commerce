@@ -32,7 +32,7 @@ public class ProductController {
             @PathVariable Integer id,
             @RequestBody @jakarta.validation.Valid StockRequest request
     ) {
-        service.addStock(id, request.getQty());
+        service.addStock(id, request.getQty(), request.getUserId());
         return "Stok berhasil ditambahkan!";
     }
 
@@ -41,7 +41,7 @@ public class ProductController {
             @PathVariable Integer id,
             @RequestBody @jakarta.validation.Valid StockRequest request
     ) {
-        service.reduceStock(id, request.getQty());
+        service.reduceStock(id, request.getQty(), request.getUserId());
         return "Stok berhasil dikurangi!";
     }
 }

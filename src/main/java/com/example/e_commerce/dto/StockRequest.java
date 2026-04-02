@@ -9,11 +9,20 @@ public class StockRequest {
     @Min(value = 1, message = "Qty minimal 1")
     private Integer qty;
 
-    public Integer getQty() {
-        return qty;
+    @NotNull(message = "User tidak boleh kosong")
+    private Integer userId;
+
+    public Integer getQty() { 
+        return qty; 
+    }
+    public Integer getUserId() { 
+        return userId; 
     }
 
-    public void setQty(Integer qty) {
-        this.qty = qty;
+    public void setQty(Integer qty) { 
+        this.qty = qty; 
+    }
+    public void setUserId(Integer userId) { 
+        this.userId = userId; 
     }
 }

@@ -34,18 +34,19 @@ public class ProductService {
     @Autowired
     private ProductStockHistoryRepository stockRepo;
 
-    public void addStock(Integer productId, Integer qty) {
+    public void addStock(Integer productId, Integer qty, Integer userId) {
 
     ProductStockHistory history = new ProductStockHistory();
     history.setProductId(productId);
     history.setQty(qty);
+    history.setUserId(userId);
     history.setChangeType("ADD");
     history.setCreatedAt(java.time.LocalDateTime.now());
 
     stockRepo.save(history);
     }
 
-    public void reduceStock(Integer productId, Integer qty) {
+    public void reduceStock(Integer productId, Integer qty, Integer userId) {
 
     int currentStock = getProductStock().stream()
             .filter(p -> p.getProductId().equals(productId))
@@ -60,6 +61,7 @@ public class ProductService {
     ProductStockHistory history = new ProductStockHistory();
     history.setProductId(productId);
     history.setQty(qty);
+    history.setUserId(userId);
     history.setChangeType("REDUCE");
     history.setCreatedAt(java.time.LocalDateTime.now());
 
