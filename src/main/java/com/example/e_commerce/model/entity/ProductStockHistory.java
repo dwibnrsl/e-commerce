@@ -1,8 +1,12 @@
 package com.example.e_commerce.model.entity;
 
 import jakarta.persistence.*;
+import lombok.*;
 import java.time.LocalDateTime;
 
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 @Entity
 @Table(name = "product_stock_history")
 public class ProductStockHistory {
@@ -24,19 +28,4 @@ public class ProductStockHistory {
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
-
-    // getter
-    public Integer getId() { return id; }
-    public Integer getProductId() { return productId; }
-    public Integer getUserId() { return userId; }
-    public Integer getQty() { return qty; }
-    public String getChangeType() { return changeType; }
-    public LocalDateTime getCreatedAt() { return createdAt; }
-
-    // setter
-    public void setProductId(Integer productId) { this.productId = productId; }
-    public void setUserId(Integer userId) { this.userId = userId; }
-    public void setQty(Integer qty) { this.qty = qty; }
-    public void setChangeType(String changeType) { this.changeType = changeType; }
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 }

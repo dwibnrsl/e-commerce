@@ -2,7 +2,11 @@ package com.example.e_commerce.model.dto.request;
 
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
+import lombok.*;
 
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class StockRequest {
 
     @NotNull(message = "Qty tidak boleh kosong")
@@ -11,18 +15,4 @@ public class StockRequest {
 
     @NotNull(message = "User tidak boleh kosong")
     private Integer userId;
-
-    public Integer getQty() { 
-        return qty; 
-    }
-    public Integer getUserId() { 
-        return userId; 
-    }
-
-    public void setQty(Integer qty) { 
-        this.qty = qty; 
-    }
-    public void setUserId(Integer userId) { 
-        this.userId = userId; 
-    }
 }

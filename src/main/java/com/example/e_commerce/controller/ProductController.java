@@ -10,7 +10,6 @@ import com.example.e_commerce.service.ProductService;
 import com.example.e_commerce.model.dto.response.ApiResponse;
 import com.example.e_commerce.model.dto.response.ProductResponse;
 import com.example.e_commerce.model.dto.response.ProductStockResponse;
-import com.example.e_commerce.model.dto.response.StockResponse;
 import com.example.e_commerce.model.dto.request.StockRequest;
 import com.example.e_commerce.model.entity.Product;
 
