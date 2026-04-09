@@ -1,47 +1,73 @@
 package com.example.e_commerce.controller;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
+
 import jakarta.validation.Valid;
 
-import com.example.e_commerce.entity.Product;
 import com.example.e_commerce.service.ProductService;
-import com.example.e_commerce.dto.ProductStockDTO;
-import com.example.e_commerce.dto.StockRequest;
+import com.example.e_commerce.model.dto.response.ApiResponse;
+import com.example.e_commerce.model.dto.response.ProductResponse;
+import com.example.e_commerce.model.dto.response.ProductStockResponse;
+import com.example.e_commerce.model.dto.response.StockResponse;
+import com.example.e_commerce.model.dto.request.StockRequest;
+import com.example.e_commerce.model.entity.Product;
 
 @RestController
 @RequestMapping("/api/products")
 public class ProductController {
 
-    @Autowired
-    private ProductService service;
+    private final ProductService service;
 
-    @GetMapping
-    public List<Product> getProducts() {
-        return service.getAllProducts();
+    // ini constructor injection
+    public ProductController(ProductService service) {
+        this.service = service;
     }
 
-    @GetMapping("/stock")
-    public List<ProductStockDTO> getProductStock() {
-        return service.getProductStock();
+    @GetMapping
+    public ResponseEntity<ApiResponse<List<ProductResponse>>> getProducts() {
+
+        List<ProductResponse> data = service.getAllProducts().stream()
+                .map(p -> new ProductResponse(p.getId(), p.getName(), p.getPrice()))
+                .toList();
+
+        return ResponseEntity.ok(
+                new ApiResponse<>(200, "Success", data)
+        );
+    }
+
+   @GetMapping("/stock")
+    public ResponseEntity<ApiResponse<List<ProductStockResponse>>> getProductStock() {
+
+        return ResponseEntity.ok(
+                new ApiResponse<>(200, "Success", service.getProductStock())
+        );
     }
 
     @PostMapping("/{id}/add-stock")
-    public String addStock(
-            @PathVariable Integer id,
-            @RequestBody @jakarta.validation.Valid StockRequest request
-    ) {
-        service.addStock(id, request.getQty(), request.getUserId());
-        return "Stok berhasil ditambahkan!";
-    }
+        public ResponseEntity<ApiResponse<ProductStockResponse>> addStock(
+                @PathVariable Integer id,
+                @RequestBody @Valid StockRequest request
+        ) {
+
+        ProductStockResponse data = service.addStock(id, request.getQty(), request.getUserId());
+
+        return ResponseEntity.ok(
+                new ApiResponse<>(200, "Success", data)
+        );
+        }
 
     @PostMapping("/{id}/reduce-stock")
-    public String reduceStock(
-            @PathVariable Integer id,
-            @RequestBody @jakarta.validation.Valid StockRequest request
-    ) {
-        service.reduceStock(id, request.getQty(), request.getUserId());
-        return "Stok berhasil dikurangi!";
-    }
+        public ResponseEntity<ApiResponse<ProductStockResponse>> reduceStock(
+                @PathVariable Integer id,
+                @RequestBody @Valid StockRequest request
+        ) {
+
+        ProductStockResponse data = service.reduceStock(id, request.getQty(), request.getUserId());
+
+        return ResponseEntity.ok(
+                new ApiResponse<>(200, "Success", data)
+        );
+        }
 }

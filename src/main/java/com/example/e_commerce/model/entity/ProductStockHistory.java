@@ -1,4 +1,4 @@
-package com.example.e_commerce.entity;
+package com.example.e_commerce.model.entity;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;

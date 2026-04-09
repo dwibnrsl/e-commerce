@@ -1,19 +1,21 @@
 package com.example.e_commerce.exception;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.Map;
 
+import com.example.e_commerce.model.dto.response.ApiResponse;
+
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    // INI VALIDATION ERROR
+    // VALIDATION ERROR
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public Map<String, String> handleValidation(MethodArgumentNotValidException ex) {
+    public ResponseEntity<ApiResponse<Map<String, String>>> handleValidation(MethodArgumentNotValidException ex) {
 
         Map<String, String> errors = new HashMap<>();
 
@@ -21,17 +23,23 @@ public class GlobalExceptionHandler {
                 errors.put(error.getField(), error.getDefaultMessage())
         );
 
-        return errors;
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(new ApiResponse<>(400, "Validation Error", errors));
     }
 
-    // INI GENERAL ERROR
+    // NOT FOUND / BUSINESS ERROR
     @ExceptionHandler(RuntimeException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public Map<String, String> handleRuntime(RuntimeException ex) {
+    public ResponseEntity<ApiResponse<String>> handleRuntime(RuntimeException ex) {
 
-        Map<String, String> error = new HashMap<>();
-        error.put("message", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(new ApiResponse<>(400, ex.getMessage(), null));
+    }
 
-        return error;
+    // SERVER ERROR
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ApiResponse<String>> handleServer(Exception ex) {
+
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(new ApiResponse<>(500, "Internal Server Error", null));
     }
 }

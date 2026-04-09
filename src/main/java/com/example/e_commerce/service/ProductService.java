@@ -1,70 +1,104 @@
 package com.example.e_commerce.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.util.List;
-import com.example.e_commerce.dto.ProductStockDTO;
-import com.example.e_commerce.entity.Product;
+
+import com.example.e_commerce.model.dto.response.ProductStockResponse;
+import com.example.e_commerce.model.entity.Product;
+import com.example.e_commerce.model.entity.ProductStockHistory;
 import com.example.e_commerce.repository.ProductRepository;
 import com.example.e_commerce.repository.ProductStockHistoryRepository;
-import com.example.e_commerce.entity.ProductStockHistory;
+import com.example.e_commerce.repository.ProductStockView;
 
 @Service
 public class ProductService {
 
-    @Autowired
-    private ProductRepository repo;
+    private final ProductRepository repo;
+    private final ProductStockHistoryRepository stockRepo;
+
+    // constructor injection
+    public ProductService(ProductRepository repo, ProductStockHistoryRepository stockRepo) {
+        this.repo = repo;
+        this.stockRepo = stockRepo;
+    }
 
     public List<Product> getAllProducts() {
-        return repo.findAll();
+        List<Product> products = repo.findAll();
+
+        if (products.isEmpty()) {
+            throw new RuntimeException("Data produk tidak ditemukan");
+        }
+
+        return products;
     }
 
-    public List<ProductStockDTO> getProductStock() {
+    public List<ProductStockResponse> getProductStock() {
 
-    List<Object[]> results = repo.getProductStock();
+        List<ProductStockView> results = repo.getProductStock();
 
-    return results.stream().map(obj -> new ProductStockDTO(
-            (Integer) obj[0],
-            (String) obj[1],
-            (java.math.BigDecimal) obj[2],
-            ((Number) obj[3]).intValue()
-    )).toList();
+        if (results.isEmpty()) {
+            throw new RuntimeException("Data stok tidak ditemukan");
+        }
+
+        return results.stream()
+                .map(p -> new ProductStockResponse(
+                        p.getProductId(),
+                        p.getProductName(),
+                        p.getPrice(),
+                        p.getStock()
+                ))
+                .toList();
     }
 
-    @Autowired
-    private ProductStockHistoryRepository stockRepo;
+    public ProductStockResponse addStock(Integer productId, Integer qty, Integer userId) {
 
-    public void addStock(Integer productId, Integer qty, Integer userId) {
+        repo.findById(productId)
+            .orElseThrow(() -> new RuntimeException("Produk tidak ditemukan"));
 
-    ProductStockHistory history = new ProductStockHistory();
-    history.setProductId(productId);
-    history.setQty(qty);
-    history.setUserId(userId);
-    history.setChangeType("ADD");
-    history.setCreatedAt(java.time.LocalDateTime.now());
+        ProductStockHistory history = new ProductStockHistory();
+        history.setProductId(productId);
+        history.setUserId(userId);
+        history.setQty(qty);
+        history.setChangeType("ADD");
+        history.setCreatedAt(java.time.LocalDateTime.now());
 
-    stockRepo.save(history);
+        stockRepo.save(history);
+
+        // ambil data terbaru
+        return getProductStock().stream()
+                .filter(p -> p.getProductId().equals(productId))
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("Gagal mengambil data"));
     }
 
-    public void reduceStock(Integer productId, Integer qty, Integer userId) {
+    public ProductStockResponse reduceStock(Integer productId, Integer qty, Integer userId) {
 
-    int currentStock = getProductStock().stream()
-            .filter(p -> p.getProductId().equals(productId))
-            .findFirst()
-            .map(p -> p.getStock())
-            .orElse(0);
+        int currentStock = getProductStock().stream()
+                .filter(p -> p.getProductId().equals(productId))
+                .findFirst()
+                .map(ProductStockResponse::getStock)
+                .orElse(0);
 
-    if (currentStock < qty) {
-        throw new RuntimeException("Stok tidak cukup!");
-    }
+        if (currentStock == 0) {
+            throw new RuntimeException("Produk tidak ditemukan");
+        }
 
-    ProductStockHistory history = new ProductStockHistory();
-    history.setProductId(productId);
-    history.setQty(qty);
-    history.setUserId(userId);
-    history.setChangeType("REDUCE");
-    history.setCreatedAt(java.time.LocalDateTime.now());
+        if (currentStock < qty) {
+            throw new RuntimeException("Stok tidak cukup");
+        }
 
-    stockRepo.save(history);
+        ProductStockHistory history = new ProductStockHistory();
+        history.setProductId(productId);
+        history.setUserId(userId);
+        history.setQty(qty);
+        history.setChangeType("REDUCE");
+        history.setCreatedAt(java.time.LocalDateTime.now());
+
+        stockRepo.save(history);
+
+        return getProductStock().stream()
+                .filter(p -> p.getProductId().equals(productId))
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("Gagal mengambil data"));
     }
 }

@@ -2,7 +2,9 @@ package com.example.e_commerce.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
-import com.example.e_commerce.entity.Product;
+
+import com.example.e_commerce.model.entity.Product;
+
 import java.util.List;
 
 public interface ProductRepository extends JpaRepository<Product, Integer> {
@@ -22,7 +24,8 @@ public interface ProductRepository extends JpaRepository<Product, Integer> {
         LEFT JOIN product_stock_history psh ON p.id = psh.product_id
         WHERE p.deleted = false
         GROUP BY p.id, p.name, p.price
+        ORDER BY p.id ASC
     """, nativeQuery = true)
-    List<Object[]> getProductStock();
+    List<ProductStockView> getProductStock();
 
 }
