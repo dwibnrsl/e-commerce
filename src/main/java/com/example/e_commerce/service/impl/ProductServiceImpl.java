@@ -9,6 +9,7 @@ import java.math.BigDecimal;
 import java.util.List;
 
 import com.example.e_commerce.exception.NotFoundException;
+import com.example.e_commerce.exception.ConflictException;
 import com.example.e_commerce.exception.InternalServerException;
 import com.example.e_commerce.model.dto.request.CreateProductRequest;
 import com.example.e_commerce.model.dto.request.UpdateProductRequest;
@@ -227,7 +228,7 @@ public class ProductServiceImpl implements ProductService {
                 .orElseThrow(() -> new NotFoundException("Produk tidak ditemukan"));
 
         if (current.getStock() < qty) {
-            throw new InternalServerException("Stok tidak cukup");
+            throw new ConflictException("Stok tidak cukup");
         }
 
         Product product = repo.findById(productId)
