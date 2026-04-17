@@ -7,6 +7,7 @@ import java.util.List;
 
 import com.example.e_commerce.model.entity.User;
 import com.example.e_commerce.model.dto.response.ApiResponse;
+import com.example.e_commerce.model.dto.response.UserResponse;
 import com.example.e_commerce.service.interfaces.UserService;
 
 @RestController
@@ -20,7 +21,7 @@ public class UserController {
     }
 
     @GetMapping
-    public ResponseEntity<ApiResponse<List<User>>> getAll() {
+    public ResponseEntity<ApiResponse<List<UserResponse>>> getUsers() {
 
         return ResponseEntity.ok(
                 new ApiResponse<>(200, "Success", service.getAllUsers())

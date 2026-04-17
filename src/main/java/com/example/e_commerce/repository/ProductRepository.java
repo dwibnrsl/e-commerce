@@ -11,6 +11,8 @@ import java.math.BigDecimal;
 import java.util.List;
 
 public interface ProductRepository extends JpaRepository<Product, Integer> {
+List<Product> findByDeletedFalse();
+boolean existsByName(String name);
 @Query(value = """
         SELECT 
             p.id AS productId,
@@ -41,10 +43,10 @@ public interface ProductRepository extends JpaRepository<Product, Integer> {
         AND (:categoryId IS NULL OR p.category.id = :categoryId)
     """)
     Page<Product> searchProducts(
-        @Param("keyword") String keyword,
-        @Param("minPrice") BigDecimal minPrice,
-        @Param("maxPrice") BigDecimal maxPrice,
-        @Param("categoryId") Integer categoryId,
+        String keyword,
+        BigDecimal minPrice,
+        BigDecimal maxPrice,
+        Integer categoryId,
         Pageable pageable
     );
 }

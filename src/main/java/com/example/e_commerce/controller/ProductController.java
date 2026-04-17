@@ -5,6 +5,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.data.domain.Page;
 import jakarta.validation.Valid;
+
+import java.math.BigDecimal;
 import java.util.List;
 
 import com.example.e_commerce.model.dto.request.CreateProductRequest;
@@ -31,39 +33,20 @@ public class ProductController {
 
     // SEARCH
     @GetMapping("/search")
-    public ResponseEntity<ApiResponse<PagedResponse<ProductResponse>>> searchProducts(
-            @RequestParam(required = false) String keyword,
-            @RequestParam(required = false) java.math.BigDecimal minPrice,
-            @RequestParam(required = false) java.math.BigDecimal maxPrice,
-            @RequestParam(required = false) Integer categoryId,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "5") int size
-    ) {
-
-        var result = service.searchProducts(keyword, minPrice, maxPrice, categoryId, page, size);
-
-        // mapping ke ProductResponse
-        List<ProductResponse> items = result.getContent().stream()
-                .map(p -> new ProductResponse(
-                        p.getId(),
-                        p.getName(),
-                        p.getPrice(),
-                        p.getCategory().getName()
-                ))
-                .toList();
-
-        PagedResponse<ProductResponse> response = new PagedResponse<>(
-                items,
-                result.getNumber(),
-                result.getSize(),
-                result.getTotalElements(),
-                result.getTotalPages()
-        );
+        public ResponseEntity<ApiResponse<PagedResponse<ProductResponse>>> searchProducts(
+                @RequestParam(required = false) String keyword,
+                @RequestParam(required = false) BigDecimal minPrice,
+                @RequestParam(required = false) BigDecimal maxPrice,
+                @RequestParam(required = false) Integer categoryId,
+                @RequestParam(defaultValue = "0") int page,
+                @RequestParam(defaultValue = "5") int size
+        ) {
 
         return ResponseEntity.ok(
-                new ApiResponse<>(200, "Success", response)
+                new ApiResponse<>(200, "Success",
+                        service.searchProducts(keyword, minPrice, maxPrice, categoryId, page, size))
         );
-    }
+        }
 
     // GET ALL PRODUCT
     @GetMapping
@@ -83,7 +66,7 @@ public class ProductController {
         ProductResponse data = service.createProduct(request);
 
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(new ApiResponse<>(201, "Produk berhasil dibuat", data));
+                .body(new ApiResponse<>(201, "Product created successfully", data));
         }
 
         // UPDATE PRODUCT
@@ -96,7 +79,18 @@ public class ProductController {
         ProductResponse data = service.updateProduct(id, request);
 
         return ResponseEntity.ok(
-                new ApiResponse<>(200, "Produk berhasil diupdate", data)
+                new ApiResponse<>(200, "Product updated successfully", data)
+        );
+        }
+
+        // DELETE PRODUCT
+        @DeleteMapping("/{id}")
+        public ResponseEntity<ApiResponse<String>> deleteProduct(@PathVariable Integer id) {
+
+        service.deleteProduct(id);
+
+        return ResponseEntity.ok(
+                new ApiResponse<>(200, "Product deleted successfully", null)
         );
         }
 
@@ -130,7 +124,7 @@ public class ProductController {
         ProductStockResponse data = service.addStock(id, request.getQty(), request.getUserId());
 
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(new ApiResponse<>(201, "Stok berhasil ditambahkan", data));
+                .body(new ApiResponse<>(201, "Stock added successfully", data));
     }
 
     // REDUCE STOCK
@@ -143,7 +137,7 @@ public class ProductController {
         ProductStockResponse data = service.reduceStock(id, request.getQty(), request.getUserId());
 
         return ResponseEntity.ok(
-                new ApiResponse<>(200, "Stok berhasil dikurangi", data)
+                new ApiResponse<>(200, "Stock reduced successfully", data)
         );
     }
 }

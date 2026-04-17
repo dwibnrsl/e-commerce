@@ -7,6 +7,7 @@ import java.util.List;
 
 import com.example.e_commerce.model.entity.Category;
 import com.example.e_commerce.model.dto.response.ApiResponse;
+import com.example.e_commerce.model.dto.response.CategoryResponse;
 import com.example.e_commerce.service.interfaces.CategoryService;
 
 @RestController
@@ -20,7 +21,7 @@ public class CategoryController {
     }
 
     @GetMapping
-    public ResponseEntity<ApiResponse<List<Category>>> getAll() {
+    public ResponseEntity<ApiResponse<List<CategoryResponse>>> getCategories() {
 
         return ResponseEntity.ok(
                 new ApiResponse<>(200, "Success", service.getAllCategories())

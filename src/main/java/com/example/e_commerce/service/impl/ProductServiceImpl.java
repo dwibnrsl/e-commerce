@@ -10,9 +10,9 @@ import java.util.List;
 
 import com.example.e_commerce.exception.NotFoundException;
 import com.example.e_commerce.exception.ConflictException;
-import com.example.e_commerce.exception.InternalServerException;
 import com.example.e_commerce.model.dto.request.CreateProductRequest;
 import com.example.e_commerce.model.dto.request.UpdateProductRequest;
+import com.example.e_commerce.model.dto.response.PagedResponse;
 import com.example.e_commerce.model.dto.response.ProductHistoryResponse;
 import com.example.e_commerce.model.dto.response.ProductResponse;
 import com.example.e_commerce.model.dto.response.ProductStockResponse;
@@ -49,7 +49,7 @@ public class ProductServiceImpl implements ProductService {
 
     // SEARCH
     @Override
-    public Page<Product> searchProducts(
+    public PagedResponse<ProductResponse> searchProducts(
         String keyword,
         BigDecimal minPrice,
         BigDecimal maxPrice,
@@ -64,35 +64,54 @@ public class ProductServiceImpl implements ProductService {
 
     // VALIDATION
         if (page < 0) {
-            throw new IllegalArgumentException("Page tidak boleh kurang dari 0");
+            throw new IllegalArgumentException("Page must not be less than 0");
         }
 
         if (size <= 0 || size > 100) {
-            throw new IllegalArgumentException("Size harus antara 1 - 100");
+            throw new IllegalArgumentException("Size must be between 1 and 100");
         }
 
         if (minPrice != null && maxPrice != null && minPrice.compareTo(maxPrice) > 0) {
-            throw new IllegalArgumentException("minPrice tidak boleh lebih besar dari maxPrice");
+            throw new IllegalArgumentException("minPrice must not be greater than maxPrice");
         }
 
         if (categoryId != null) {
         categoryRepo.findById(categoryId)
-                .orElseThrow(() -> new NotFoundException("Category tidak ditemukan"));
+                .orElseThrow(() -> new NotFoundException("Category not found"));
         }
 
         Pageable pageable = PageRequest.of(page, size);
 
-        return repo.searchProducts(keyword, minPrice, maxPrice, categoryId, pageable);
+        Page<Product> result = repo.searchProducts(
+            keyword, minPrice, maxPrice, categoryId, pageable
+        );
+
+        List<ProductResponse> items = result.getContent().stream()
+            .map(p -> new ProductResponse(
+                    p.getId(),
+                    p.getName(),
+                    p.getPrice(),
+                    p.getCategory().getName()
+            ))
+            .toList();
+
+        return new PagedResponse<>(
+                items,
+                result.getNumber(),
+                result.getSize(),
+                result.getTotalElements(),
+                result.getTotalPages()
+        );
     }
 
     // GET PRODUCT
     @Override
     public List<ProductResponse> getAllProducts() {
 
-        List<Product> products = repo.findAll();
+        List<Product> products = repo.findByDeletedFalse();
 
         if (products.isEmpty()) {
-            throw new NotFoundException("Data produk tidak ditemukan");
+            throw new NotFoundException("Product not found");
         }
 
         return products.stream()
@@ -110,7 +129,11 @@ public class ProductServiceImpl implements ProductService {
     public ProductResponse createProduct(CreateProductRequest request) {
 
         Category category = categoryRepo.findById(request.getCategoryId())
-                .orElseThrow(() -> new NotFoundException("Category tidak ditemukan"));
+                .orElseThrow(() -> new NotFoundException("Category not found"));
+
+        if (repo.existsByName(request.getName())) {
+        throw new ConflictException("Product already exists");
+        }
 
         Product product = new Product();
         product.setName(request.getName());
@@ -134,10 +157,11 @@ public class ProductServiceImpl implements ProductService {
     public ProductResponse updateProduct(Integer id, UpdateProductRequest request) {
 
         Product product = repo.findById(id)
-                .orElseThrow(() -> new NotFoundException("Produk tidak ditemukan"));
+            .filter(p -> !Boolean.TRUE.equals(p.getDeleted()))
+            .orElseThrow(() -> new NotFoundException("Product not found"));
 
         Category category = categoryRepo.findById(request.getCategoryId())
-                .orElseThrow(() -> new NotFoundException("Category tidak ditemukan"));
+                .orElseThrow(() -> new NotFoundException("Category not found"));
 
         product.setName(request.getName());
         product.setPrice(request.getPrice());
@@ -154,6 +178,17 @@ public class ProductServiceImpl implements ProductService {
         );
     }
 
+    // DELETE
+    @Override
+    public void deleteProduct(Integer id) {
+
+        Product product = repo.findById(id)
+                .orElseThrow(() -> new NotFoundException("Product not found"));
+
+        product.setDeleted(true);
+        repo.save(product);
+    }
+    
     // HISTORY
     @Override
     public List<ProductHistoryResponse> getProductHistory(Integer productId) {
@@ -161,7 +196,7 @@ public class ProductServiceImpl implements ProductService {
         List<ProductStockHistory> histories = stockRepo.findByProduct_Id(productId);
 
         if (histories.isEmpty()) {
-            throw new NotFoundException("History tidak ditemukan");
+            throw new NotFoundException("History not found");
         }
 
         return histories.stream()
@@ -183,7 +218,7 @@ public class ProductServiceImpl implements ProductService {
         List<ProductStockView> results = repo.getProductStock();
 
         if (results.isEmpty()) {
-            throw new NotFoundException("Data stok tidak ditemukan");
+            throw new NotFoundException("No products found");
         }
 
         return results.stream()
@@ -201,10 +236,10 @@ public class ProductServiceImpl implements ProductService {
     public ProductStockResponse addStock(Integer productId, Integer qty, Integer userId) {
 
         Product product = repo.findById(productId)
-        .orElseThrow(() -> new NotFoundException("Produk tidak ditemukan"));
+        .orElseThrow(() -> new NotFoundException("Product not found"));
 
         User user = userRepo.findById(userId)
-                .orElseThrow(() -> new NotFoundException("User tidak ditemukan"));
+                .orElseThrow(() -> new NotFoundException("User not found"));
 
         ProductStockHistory history = new ProductStockHistory();
         history.setProduct(product);
@@ -225,17 +260,17 @@ public class ProductServiceImpl implements ProductService {
         ProductStockResponse current = getProductStock().stream()
                 .filter(p -> p.getProductId().equals(productId))
                 .findFirst()
-                .orElseThrow(() -> new NotFoundException("Produk tidak ditemukan"));
+                .orElseThrow(() -> new NotFoundException("Product not found"));
 
         if (current.getStock() < qty) {
-            throw new ConflictException("Stok tidak cukup");
+            throw new ConflictException("Stock is not sufficient");
         }
 
         Product product = repo.findById(productId)
-                .orElseThrow(() -> new NotFoundException("Produk tidak ditemukan"));
+                .orElseThrow(() -> new NotFoundException("Product not found"));
 
         User user = userRepo.findById(userId)
-                .orElseThrow(() -> new NotFoundException("User tidak ditemukan"));
+                .orElseThrow(() -> new NotFoundException("User not found"));
 
         ProductStockHistory history = new ProductStockHistory();
         history.setProduct(product);
@@ -254,6 +289,6 @@ public class ProductServiceImpl implements ProductService {
         return getProductStock().stream()
                 .filter(p -> p.getProductId().equals(productId))
                 .findFirst()
-                .orElseThrow(() -> new NotFoundException("Produk tidak ditemukan"));
+                .orElseThrow(() -> new NotFoundException("Product not found"));
     }
 }

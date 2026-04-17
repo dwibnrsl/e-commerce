@@ -2,12 +2,12 @@ package com.example.e_commerce.model.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "product")
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -25,7 +25,8 @@ public class Product {
     @ManyToOne
     @JoinColumn(name = "category_id")
     private Category category;
-
+    
+    @Column(name = "deleted")
     private Boolean deleted;
 
     @Column(name = "created_at")

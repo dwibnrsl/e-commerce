@@ -43,14 +43,6 @@ public class GlobalExceptionHandler {
                 .body(new ApiResponse<>(400, ex.getMessage(), null));
     }
 
-    // INTERNAL SERVER ERROR (500) → GENERIC MESSAGE
-    @ExceptionHandler(InternalServerException.class)
-    public ResponseEntity<ApiResponse<String>> handleInternal(InternalServerException ex) {
-
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(new ApiResponse<>(500, "Terjadi kesalahan pada server", null));
-    }
-
     // FALLBACK ERROR (500)
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<String>> handleServer(Exception ex) {
